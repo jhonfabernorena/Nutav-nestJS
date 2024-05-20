@@ -12,9 +12,9 @@ import {
 import { Document } from 'mongoose';
 
 export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin',
-  SELLER = 'seller',
+  ADMIN = 'Admin',
+  TRAVELER = 'Traveler',
+  GUIDE = 'Guide',
 }
 
 @Schema({ timestamps: true })
@@ -41,7 +41,7 @@ export class User extends Document {
 
   @IsOptional()
   @IsEnum(UserRole)
-  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
+  @Prop({ type: String, enum: UserRole, default: UserRole.TRAVELER })
   role: UserRole;
 }
 

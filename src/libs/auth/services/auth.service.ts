@@ -23,16 +23,18 @@ export class AuthService {
       userLogInDto.password,
       user.password,
     );
+
     if (!isPasswordValid) {
       throw new BadRequestException('Incorrect password');
     }
 
     return await this.getTokens({
       sub: user.id,
+      role: user.role,
     });
   }
 
-  async register(userRegister: SignUpDto): Promise<Tokens> {
+  async register(userRegister: SignUpDto) {
     await this.validateEmailForSignUp(userRegister.email);
 
     const hashedPassword = await this.hashService.hash(userRegister.password);
@@ -44,9 +46,8 @@ export class AuthService {
       role: userRegister.role,
     });
 
-    return await this.getTokens({
-      sub: user.id,
-    });
+    return user;
+
   }
 
   async getTokens(jwtPayload: JwtPayload): Promise<Tokens> {

@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   HttpCode,
+  HttpException,
   HttpStatus,
   Post,
   UseGuards,
@@ -15,7 +16,7 @@ import { AuthService } from '../services/auth.service';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   /* 
   This method handles POST /auth/register requests. It's decorated with @Public(), meaning it can be accessed without authentication. It takes a SignUpDto object from the request body, passes it to AuthService.register(), and returns the resulting access token.
@@ -24,8 +25,19 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(@Body() signUpDto: SignUpDto) {
-    const token = await this.authService.register(signUpDto);
-    return { access_token: token.access_token };
+    const user = await this.authService.register(signUpDto);
+
+    try {
+      if (!user) {
+        throw new HttpException('User not registered', HttpStatus.NOT_FOUND);
+      }
+      return user;
+    } catch (error) {
+      if (error.status === HttpStatus.NOT_FOUND) {
+        throw error;
+      }
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   /* 
@@ -35,9 +47,20 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async logIn(@Body() userLogInDto: UserLoginDto) {
-    const token = await this.authService.logIn(userLogInDto);
+    try {
+      const token = await this.authService.logIn(userLogInDto);
 
-    return { access_token: token.access_token };
+      if (!token) {
+        throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      }
+
+      return { access_token: token.access_token };
+    } catch (error) {
+      if (error.status === HttpStatus.UNAUTHORIZED) {
+        throw error;
+      }
+      throw new HttpException('Internal server error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   /* 
